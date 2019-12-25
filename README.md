@@ -1,8 +1,9 @@
 CubeMx生成基本框架
-CAN文件夹里是CAN发送CAN_TX（CAN_Master）
-CAN_TX在串口2中断服务函数中用DMA接收ESP8266传来的数据（串口3和PC交互，串口2和ESP8266交互）
+CAN发送CAN_TX文件夹（CAN_Master）
+CAN_TX在串口2中断服务函数中用DMA接收ESP8266传来的数据（串口3和PC交互，串口2和ESP8266服务端交互）
 
-CAN_RX文件夹CAN接收CAN_RX(CAN_Slave)
+CAN接收CAN_RX文件夹(CAN_Slave)
 
-其他文件夹均为问题代码
+其他文件夹均为废弃代码
 
+目前CAN_TX可接收ESP8266客户端传来给服务端的数据，并把数据转发给CAN_RX

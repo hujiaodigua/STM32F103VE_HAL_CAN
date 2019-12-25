@@ -409,6 +409,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 void uartdamget(void)
 {
   uint8_t temp[1];
+  // uint8_t temp_before[1];
   HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 
   if(recv_end_flag ==1)
@@ -420,13 +421,24 @@ void uartdamget(void)
 	  sprintf(temp,"%c",ReceiveBuff[i]);
       HAL_UART_Transmit(&huart3,temp,1,10);
 
-	  hcan.pTxMsg -> Data[1] = temp;    // 替换CAN的发送数据，暂时用来测试
-      HAL_CAN_Transmit(&hcan, 10);      // 用CAN口把数据发出去
+      // hcan.pTxMsg -> Data[0] = 0xEF;
+	  // hcan.pTxMsg -> Data[1] = 0xFE;    // 替换CAN的发送数据，暂时用来测试
+      // HAL_CAN_Transmit(&hcan, 10);      // 用CAN口把数据发出去
 	}
+
+    if (ReceiveBuff[Rx_len-1] == 'T' && ReceiveBuff[Rx_len - 2] == 'A' && ReceiveBuff[Rx_len - 3] == 'D' && ReceiveBuff[Rx_len - 4] == 'Y' && ReceiveBuff[Rx_len - 5] == 'M')   // 用最后一位向前数进行判断会好一些
+    {
+      HAL_UART_Transmit(&huart3,"\r\nCorrect",9,10);
+      hcan.pTxMsg -> Data[0] = ReceiveBuff[Rx_len - 7] - 0x30;// ASC ii数字转制数字
+	  hcan.pTxMsg -> Data[1] = ReceiveBuff[Rx_len - 6] - 0x30;    // 替换CAN的发送数据，暂时用来测试
+      HAL_CAN_Transmit(&hcan, 10);      // 用CAN口把数据发出去,还是得传两次那边才能收到
+      HAL_CAN_Transmit(&hcan, 10);
+    }
+
 	HAL_UART_Transmit(&huart3,"\r\n",2,10);         
 	/*清空接收缓存区*/
     for(int i = 0; i < Rx_len ; i++)
-	ReceiveBuff[i]=0;
+	  ReceiveBuff[i]=0;
 	/*接收数据长度清零*/
 	Rx_len=0;
 	recv_end_flag=0;
@@ -455,7 +467,9 @@ void Func_Task0(void const * argument)
   hcan.pTxMsg -> Data[0] = 0xAB;
   hcan.pTxMsg -> Data[1] = 0xCD;
 
+  // 为什么传2次那边CAN_rx才能收到
   HAL_CAN_Transmit(&hcan, 10);  // 注意第二个参数是timeout，与常规库函数不同
+  HAL_CAN_Transmit(&hcan, 10);
   /* Infinite loop */
   for(;;)
   {
